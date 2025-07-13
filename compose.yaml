@@ -10,7 +10,7 @@ on:
 
 jobs:
   run_ecg_script:
-    runs-on: ubuntu-latest # Se ejecutará en una máquina virtual Linux (Ubuntu)
+   runs-on: windows-latest
 
     steps:
     - name: 🚀 Checkout del código del repositorio
