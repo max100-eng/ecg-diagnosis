@@ -1,0 +1,63 @@
+# Medical AI Backend
+
+Este es un servidor backend de ejemplo implementado con FastAPI para procesar datos clínicos multimodales utilizando varios modelos de IA.
+
+**¡IMPORTANTE: ESTE CÓDIGO ES PARA DEMOSTRACIÓN Y NO ES COMPATIBLE CON HIPAA/GDPR TAL CUAL. NO LO USES EN PRODUCCIÓN CON DATOS DE SALUD REALES SIN LAS MEDIDAS DE SEGURIDAD Y CUMPLIMIENTO ADECUADAS!**
+
+## Características
+
+* Recibe archivos de ECG e imágenes médicas.
+* Recibe contexto clínico en formato JSON.
+* Orquesta llamadas a múltiples modelos de IA (simulados y reales como Gemini).
+* Combina las respuestas de IA en un resultado integrado.
+* Autenticación básica con JWT.
+* Contenedorización con Docker.
+
+## Modelos de IA (Simulados y Reales)
+
+* **DeepSeek-V3 (ECG):** Simulado.
+* **Gemini Vision (Imágenes):** Implementación real usando `gemini-2.0-flash` para análisis de imágenes.
+* **Med-PaLM 2 (Conocimiento médico):** Simulado.
+* **Claude Medical (Razonamiento):** Simulado.
+* **GPT-4 Omni (Análisis general):** Simulado.
+
+## Configuración del Entorno
+
+1.  **Clonar el repositorio:**
+    ```bash
+    git clone <URL_DEL_REPOSITORIO>
+    cd medical-ai-backend
+    ```
+
+2.  **Crear un entorno virtual (recomendado):**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate # En Windows: `venv\Scripts\activate`
+    ```
+
+3.  **Instalar dependencias:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4.  **Configurar variables de entorno:**
+    Crea un archivo `.env` en la raíz del proyecto y añade tus claves de API y configuraciones.
+
+    ```dotenv
+    JWT_SECRET_KEY="tu_clave_secreta_jwt_muy_larga_y_aleatoria_aqui"
+    GEMINI_API_KEY="" # Dejar vacío si Canvas lo provee automáticamente
+    DEEPSEEK_API_KEY="sk-tu_clave_deepseek" # Clave simulada o real
+    MEDPALM_CLAUDE_API_KEY="sk-tu_clave_medpalm_claude" # Clave simulada o real
+    GPT4_API_KEY="sk-tu_clave_gpt4" # Clave simulada o real
+
+    # Directorio para almacenar archivos subidos (¡NO USAR EN PRODUCCIÓN CON PHI!)
+    UPLOAD_DIR="./uploaded_files"
+    ```
+    **Nota:** Para `GEMINI_API_KEY`, si estás ejecutando esto en un entorno Canvas, a menudo se inyecta automáticamente si la dejas vacía. Para pruebas locales fuera de Canvas, necesitarás una clave de Google Cloud/Gemini API.
+
+## Ejecutar el Backend
+
+### 1. En modo desarrollo (Python directamente)
+
+```bash
+uvicorn main:app --reload --host 0.0.0.0 --port 8000

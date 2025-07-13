@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico Médico Avanzado con IA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+        }
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding-top: 20px;
+            background-color: #ffffff !important;
+            box-shadow: 2px 0 5px rgba(0,0,0,.1);
+        }
+        .sidebar .nav-link {
+            color: #495057;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            transition: all 0.3s ease;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: #e9ecef;
+            color: #007bff;
+        }
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+        .content {
+            margin-left: 16.66666667%; /* Offset for col-md-2 sidebar */
+            padding: 20px;
+        }
+        .file-upload {
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+            background-color: #ffffff;
+            transition: all 0.3s ease;
+        }
+        .file-upload:hover {
+            background-color: #eaf5ff;
+            border-color: #0056b3;
+        }
+        .file-upload p {
+            margin-bottom: 10px;
+            color: #6c757d;
+        }
+        .file-upload i {
+            color: #007bff;
+        }
+        .analysis-section {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,.05);
+        }
+        .heatmap {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .modal-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        .loading-spinner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            text-align: center;
+            color: #007bff;
+        }
+        .loading-spinner .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            margin-bottom: 15px;
+        }
+        .tab-content {
+            padding: 20px 0;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,.05);
+            border-radius: 8px;
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        .form-check-input:checked {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .form-select:focus, .form-control:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+        }
+        #multimodal-preview-container img {
+            max-width: 150px;
+            max-height: 150px;
+            object-fit: contain;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .file-preview-item {
+            position: relative;
+            display: inline-block;
+            margin: 5px;
+        }
+        .remove-file-btn {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .progress-bar {
+            transition: width 0.6s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2 sidebar bg-light">
+                <div class="sticky-top pt-3">
+                    <h4 class="text-center mb-4">Módulos</h4>
+                    <ul class="nav flex-column nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#ecg-tab" data-bs-toggle="tab">
+                                <i class="bi bi-heart-pulse"></i> Análisis de ECG
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#radiology-tab" data-bs-toggle="tab">
+                                <i class="bi bi-x-ray"></i> Imágenes Radiológicas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#multimodal-tab" data-bs-toggle="tab">
+                                <i class="bi bi-robot"></i> Consulta Multimodal
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="mt-5 border-top pt-4">
+                        <h6 class="text-center mb-3">Configuración Global</h6>
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="detailedAnalysis">
+                            <label class="form-check-label" for="detailedAnalysis">Análisis detallado</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="secondOpinion" checked>
+                            <label class="form-check-label" for="secondOpinion">Segunda opinión IA</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-10 offset-md-2 content"> <div class="tab-content">
+                    <div class="tab-pane fade show active" id="ecg-tab">
+                        <h2 class="mt-3"><i class="bi bi-heart-pulse"></i> Análisis de ECG con IA</h2>
+                        <p class="lead text-muted">Interpretación avanzada de electrocardiogramas mediante modelos multimodales.</p>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        Subir ECG
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="ecg-upload" class="file-upload">
+                                            <p><i class="bi bi-cloud-arrow-up" style="font-size: 2rem;"></i></p>
+                                            <p>Arrastra y suelta tu archivo de ECG aquí o haz clic para seleccionar</p>
+                                            <input type="file" id="ecg-file" accept=".jpg,.jpeg,.png,.pdf,.dicom,.dcm" style="display: none;">
+                                            <div class="form-group mt-3">
+                                                <label for="ecg-type" class="form-label">Tipo de ECG:</label>
+                                                <select class="form-select" id="ecg-type">
+                                                    <option value="standard">Estándar (12 derivaciones)</option>
+                                                    <option value="holter">Holter (24h)</option>
+                                                    <option value="stress">Prueba de esfuerzo</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div id="ecg-preview" class="text-center mt-3" style="display: none;">
+                                            <img id="ecg-image" src="#" alt="ECG Preview" class="img-fluid rounded shadow-sm">
+                                            <button class="btn btn-danger btn-sm mt-2" id="remove-ecg">Eliminar archivo</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        Parámetros de análisis
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="detect-arrhythmias" checked>
+                                            <label class="form-check-label" for="detect-arrhythmias">
+                                                Detectar arritmias
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="measure-intervals" checked>
+                                            <label class="form-check-label" for="measure-intervals">
+                                                Medir intervalos (PR, QRS, QT)
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="analyze-st" checked>
+                                            <label class="form-check-label" for="analyze-st">
+                                                Analizar segmento ST
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" id="compare-previous">
+                                            <label class="form-check-label" for="compare-previous">
+                                                Comparar con ECG previos
+                                            </label>
+                                        </div>
+                                        <button class="btn btn-primary" id="analyze-ecg">Analizar ECG</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        Resultados del análisis
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="ecg-loading" class="loading-spinner">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                            <p>Analizando ECG con modelos multimodales...</p>
+                                        </div>
+                                        <div id="ecg-results">
+                                            <p class="text-muted">Suba un archivo de ECG para comenzar el análisis.</p>
+                                        </div>
+                                        <div id="ecg-heatmap" class="mt-3" style="display: none;">
+                                            <h5>Mapa de calor de anomalías</h5>
+                                            <img id="heatmap-img" src="https://via.placeholder.com/400x200?text=Heatmap+de+ECG" alt="Heatmap" class="heatmap">
+                                            <div class="mt-2">
+                                                <button class="btn btn-sm btn-outline-primary" id="zoom-heatmap">Ampliar</button>
+                                            </div>
+                                        </div>
+                                        <div id="ecg-comparison" class="mt-3" style="display: none;">
+                                            <h5>Comparación temporal</h5>
+                                            <p class="text-muted small">Cambio respecto al ECG anterior (simulado):</p>
+                                            <div class="progress mt-2" style="height: 25px;">
+                                                <div class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25% Mejor</div>
+                                                <div class="progress-bar bg-warning" role="progressbar" style="width: 15%" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">15% Peor</div>
+                                                <div class="progress-bar bg-info" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100">60% Sin cambios</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        Explicación de la IA
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="ai-explanation">
+                                            <p class="text-muted">La explicación del modelo aparecerá aquí después del análisis.</p>
+                                        </div>
+                                        <div class="mt-3">
+                                            <small class="text-muted">Modelos utilizados para ECG: DeepSeek-V3, Gemini Vision (para interpretación visual), Med-PaLM 2 (para contexto médico).</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="radiology-tab">
+                        <h2 class="mt-3"><i class="bi bi-x-ray"></i> Análisis de Imágenes Radiológicas</h2>
+                        <p class="lead text-muted">Interpretación avanzada mediante visión por computadora y modelos multimodales.</p>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        Subir imágenes
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="radiology-upload" class="file-upload">
+                                            <p><i class="bi bi-cloud-arrow-up" style="font-size: 2rem;"></i></p>
+                                            <p>Arrastra y suelta tus imágenes radiológicas aquí o haz clic para seleccionar</p>
+                                            <input type="file" id="radiology-file" accept=".jpg,.jpeg,.png,.dicom,.dcm,.nii,.nii.gz" multiple style="display: none;">
+                                        </div>
+                                        
+                                        <div class="form-group mt-3">
+                                            <label for="modality-type" class="form-label">Modalidad:</label>
+                                            <select class="form-select" id="modality-type">
+                                                <option value="xray">Radiografía</option>
+                                                <option value="ct">Tomografía Computarizada</option>
+                                                <option value="mri">Resonancia Magnética</option>
+                                                <option value="ultrasound">Ecografía</option>
+                                                <option value="pet">PET Scan</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="form-group mt-3">
+                                            <label for="body-part" class="form-label">Área del cuerpo:</label>
+                                            <select class="form-select" id="body-part">
+                                                <option value="chest">Tórax</option>
+                                                <option value="head">Cabeza/Cerebro</option>
+                                                <option value="abdomen">Abdomen</option>
+                                                <option value="extremities">Extremidades</option>
+                                                <option value="spine">Columna Vertebral</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div id="radiology-preview" class="mt-3">
+                                            <h6 class="text-muted">Imágenes cargadas:</h6>
+                                            <div class="row" id="radiology-preview-container"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        Análisis avanzado
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label class="form-label">Opciones de análisis:</label>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="detect-lesions" checked>
+                                                <label class="form-check-label" for="detect-lesions">
+                                                    Detectar lesiones/anomalías
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="measure-lesions" checked>
+                                                <label class="form-check-label" for="measure-lesions">
+                                                    Medir dimensiones de lesiones
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" id="compare-studies">
+                                                <label class="form-check-label" for="compare-studies">
+                                                    Comparar con estudios previos
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="checkbox" id="generate-report" checked>
+                                                <label class="form-check-label" for="generate-report">
+                                                    Generar informe estructurado
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary" id="analyze-radiology">Analizar imágenes</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        Resultados del análisis
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="radiology-loading" class="loading-spinner">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                            <p>Analizando imágenes con modelos multimodales...</p>
+                                        </div>
+                                        <div id="radiology-results">
+                                            <p class="text-muted">Suba imágenes radiológicas para comenzar el análisis.</p>
+                                        </div>
+                                        <div id="radiology-findings" class="mt-3" style="display: none;">
+                                            <h5>Hallazgos principales</h5>
+                                            <ul id="findings-list" class="list-group list-group-flush">
+                                                <li class="list-group-item">Simulación: Nódulo pulmonar sospechoso en lóbulo superior derecho (1.5 cm)</li>
+                                                <li class="list-group-item">Simulación: Derrame pleural leve bilateral</li>
+                                            </ul>
+                                        </div>
+                                        <div id="radiology-3d" class="mt-3" style="display: none;">
+                                            <h5>Reconstrucción 3D (Simulada)</h5>
+                                            <div class="ratio ratio-16x9 border rounded overflow-hidden">
+                                                <iframe id="3d-viewer" src="" allowfullscreen title="3D Viewer"></iframe>
+                                            </div>
+                                            <div class="mt-2">
+                                                <button class="btn btn-sm btn-outline-primary" id="rotate-3d">Rotar modelo</button>
+                                                <button class="btn btn-sm btn-outline-secondary" id="slice-3d">Cortes transversales</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        Informe estructurado
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="structured-report">
+                                            <p class="text-muted">El informe aparecerá aquí después del análisis.</p>
+                                            <p class="small text-success">Ejemplo de informe (simulado):</p>
+                                            <pre class="bg-light p-3 rounded border">
+<strong>INFORME RADIOLÓGICO AUTOMATIZADO</strong>
+
+<strong>Fecha:</strong> 11/07/2025
+<strong>Modalidad:</strong> Tomografía Computarizada (TC) de Tórax
+<strong>Hallazgos:</strong>
+    - Nódulo sólido, bordes espiculados, en segmento apical de lóbulo superior derecho, mide 1.5 x 1.2 cm.
+    - Pequeño derrame pleural bilateral, mayor en el lado derecho.
+    - No se observan adenopatías mediastínicas significativas.
+<strong>Impresión:</strong>
+    - Nódulo pulmonar sospechoso (probabilidad alta de malignidad). Se recomienda seguimiento y/o biopsia.
+    - Derrame pleural de etiología a determinar.
+
+<strong>Analizado por:</strong> IA Multimodal (Gemini Vision, Med-PaLM 2, GPT-4 Omni)
+                                            </pre>
+                                        </div>
+                                        <div class="mt-3">
+                                            <button class="btn btn-outline-primary" id="download-report"><i class="bi bi-download"></i> Descargar informe PDF</button>
+                                            <button class="btn btn-outline-secondary" id="share-report"><i class="bi bi-share"></i> Compartir con colegas</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="multimodal-tab">
+                        <h2 class="mt-3"><i class="bi bi-robot"></i> Consulta Multimodal Avanzada</h2>
+                        <p class="lead text-muted">Integración de múltiples modelos de IA para un diagnóstico integral.</p>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        Entrada multimodal
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="clinical-context" class="form-label">Contexto clínico:</label>
+                                            <textarea class="form-control" id="clinical-context" rows="4" placeholder="Describa el contexto clínico, síntomas, historial médico, resultados de laboratorio, etc."></textarea>
+                                        </div>
+                                        
+                                        <div id="multimodal-upload" class="file-upload mb-3">
+                                            <p><i class="bi bi-file-earmark-medical" style="font-size: 2rem;"></i></p>
+                                            <p>Subir imágenes (radiografías, CT, MRI), ECG, informes médicos, o datos de laboratorio (PDF, TXT, CSV)</p>
+                                            <input type="file" id="multimodal-file-input" multiple accept=".jpg,.jpeg,.png,.pdf,.dicom,.dcm,.txt,.csv" style="display: none;">
+                                        </div>
+                                        
+                                        <div id="multimodal-preview" class="mb-3">
+                                            <h6 class="text-muted">Archivos cargados:</h6>
+                                            <div class="d-flex flex-wrap" id="multimodal-preview-container">
+                                                </div>
+                                        </div>
+                                        
+                                        <div class="form-group mb-3">
+                                            <label for="ai-models" class="form-label">Modelos de IA a utilizar:</label>
+                                            <select class="form-select" id="ai-models" multiple aria-label="Seleccionar modelos de IA">
+                                                <option value="gpt4o" selected>GPT-4 Omni (Análisis general)</option>
+                                                <option value="gemini" selected>Gemini Vision (Imágenes)</option>
+                                                <option value="deepseek" selected>DeepSeek-V3 (ECG)</option>
+                                                <option value="medpalm" selected>Med-PaLM 2 (Conocimiento médico)</option>
+                                                <option value="claude" selected>Claude Medical (Razonamiento)</option>
+                                            </select>
+                                            <small class="form-text text-muted">Mantenga Ctrl/Cmd para seleccionar múltiples.</small>
+                                        </div>
+                                        
+                                        <div class="form-group mt-3">
+                                            <label for="query-type" class="form-label">Tipo de consulta:</label>
+                                            <select class="form-select" id="query-type">
+                                                <option value="diagnosis">Diagnóstico diferencial</option>
+                                                <option value="interpretation">Interpretación de hallazgos</option>
+                                                <option value="treatment">Opciones de tratamiento</option>
+                                                <option value="prognosis">Pronóstico</option>
+                                                <option value="education">Educación del paciente</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <button class="btn btn-primary mt-4 w-100" id="ask-ai">Consultar a la IA</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        Respuesta multimodal
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="multimodal-loading" class="loading-spinner" style="display: none;">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                            <p>Integrando análisis de múltiples modelos de IA...</p>
+                                        </div>
+                                        <div id="multimodal-response">
+                                            <p class="text-muted">Realice una consulta multimodal para obtener un análisis integrado.</p>
+                                        </div>
+                                        <div id="confidence-meter" class="mt-3" style="display: none;">
+                                            <h5 class="mb-2">Nivel de confianza de la IA</h5>
+                                            <div class="progress" style="height: 25px;">
+                                                <div class="progress-bar bg-info" id="confidence-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                                            </div>
+                                            <small class="text-muted">Esta métrica representa el consenso y la certeza de los modelos utilizados.</small>
+                                        </div>
+                                        <div id="differential-dx" class="mt-3" style="display: none;">
+                                            <h5 class="mb-3">Diagnósticos diferenciales</h5>
+                                            <table class="table table-sm table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Diagnóstico</th>
+                                                        <th>Probabilidad</th>
+                                                        <th>Evidencia Clave</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="dx-table-body">
+                                                    </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        Explicación del modelo
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="model-reasoning">
+                                            <p class="text-muted">El razonamiento de la IA aparecerá aquí.</p>
+                                        </div>
+                                        <div class="mt-3">
+                                            <button class="btn btn-sm btn-outline-primary" id="show-sources"><i class="bi bi-book"></i> Mostrar fuentes</button>
+                                            <button class="btn btn-sm btn-outline-secondary" id="debate-models"><i class="bi bi-chat-left-text"></i> Debatir entre modelos</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Visualización de Imagen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" src="#" class="modal-image img-fluid" alt="Imagen ampliada">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Bootstrap tabs
+            var triggerTabList = document.querySelectorAll('#myTab button')
+            triggerTabList.forEach(triggerEl => {
+                var tabTrigger = new bootstrap.Tab(triggerEl)
+
+                triggerEl.addEventListener('click', event => {
+                    event.preventDefault()
+                    tabTrigger.show()
+                })
+            });
+
+            // --- General File Upload Logic (reusable) ---
+            function setupFileUpload(uploadAreaId, fileInputId, previewContainerId, imagePreviewId = null, removeButtonId = null) {
+                const uploadArea = document.getElementById(uploadAreaId);
+                const fileInput = document.getElementById(fileInputId);
+                const previewContainer = document.getElementById(previewContainerId);
+
+                if (!uploadArea || !fileInput || !previewContainer) {
+                    console.error("Missing elements for file upload setup:", {uploadAreaId, fileInputId, previewContainerId});
+                    return;
+                }
+
+                const files = new DataTransfer(); // To store files for multimodal tab
+
+                uploadArea.addEventListener('click', () => fileInput.click());
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.style.backgroundColor = '#eaf5ff';
+                });
+                uploadArea.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    uploadArea.style.backgroundColor = '#ffffff';
+                });
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.style.backgroundColor = '#ffffff';
+                    handleFiles(e.dataTransfer.files);
+                });
+                fileInput.addEventListener('change', (e) => {
+                    handleFiles(e.target.files);
+                });
+
+                function handleFiles(newFiles) {
+                    if (imagePreviewId && removeButtonId) { // Single file mode (ECG)
+                        const imagePreview = document.getElementById(imagePreviewId);
+                        const removeButton = document.getElementById(removeButtonId);
+                        if (newFiles.length > 0) {
+                            const file = newFiles[0];
+                            if (file.type.startsWith('image/')) {
+                                const reader = new FileReader();
+                                reader.onload = (e) => {
+                                    imagePreview.src = e.target.result;
+                                    imagePreview.parentElement.style.display = 'block';
+                                    uploadArea.style.display = 'none';
+                                };
+                                reader.readAsDataURL(file);
+                            } else {
+                                imagePreview.parentElement.style.display = 'none';
+                                uploadArea.style.display = 'block';
+                                alert("Por favor, suba un archivo de imagen (JPG, PNG) o un tipo de archivo médico compatible.");
+                            }
+                        }
+                        if (removeButton) {
+                            removeButton.onclick = () => {
+                                imagePreview.src = '#';
+                                imagePreview.parentElement.style.display = 'none';
+                                uploadArea.style.display = 'block';
+                                fileInput.value = ''; // Clear file input
+                            };
+                        }
+                    } else { // Multiple file mode (Radiology, Multimodal)
+                        for (const file of newFiles) {
+                            if (!Array.from(files.files).some(f => f.name === file.name && f.size === file.size)) { // Avoid duplicates
+                                files.items.add(file);
+                            }
+                        }
+                        fileInput.files = files.files; // Update the actual input files
+                        updatePreviewDisplay(files.files);
+                    }
+                }
+
+                function updatePreviewDisplay(currentFiles) {
+                    previewContainer.innerHTML = ''; // Clear previous previews
+                    if (currentFiles.length === 0) {
+                        previewContainer.style.display = 'none';
+                        return;
+                    }
+                    previewContainer.style.display = 'flex'; // Use flexbox for horizontal layout
+
+                    Array.from(currentFiles).forEach((file, index) => {
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-preview-item';
+
+                        const removeBtn = document.createElement('button');
+                        removeBtn.className = 'remove-file-btn';
+                        removeBtn.innerHTML = '&times;';
+                        removeBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            files.items.remove(index); // Remove from DataTransfer object
+                            fileInput.files = files.files; // Update the actual input files
+                            updatePreviewDisplay(files.files); // Re-render previews
+                        };
+
+                        if (file.type.startsWith('image/')) {
+                            const img = document.createElement('img');
+                            img.src = URL.createObjectURL(file);
+                            img.alt = file.name;
+                            img.className = 'img-thumbnail';
+                            img.title = file.name;
+                            img.style.cursor = 'zoom-in';
+                            img.onclick = () => {
+                                const modalImage = document.getElementById('modalImage');
+                                modalImage.src = img.src;
+                                const modalTitle = document.getElementById('modalTitle');
+                                modalTitle.textContent = file.name;
+                                var imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
+                                imageModal.show();
+                            };
+                            fileItem.appendChild(img);
+                        } else {
+                            const icon = document.createElement('div');
+                            icon.innerHTML = `<i class="bi bi-file-earmark" style="font-size: 3rem;"></i><br><small>${file.name}</small>`;
+                            icon.className = 'text-center p-2 border rounded';
+                            icon.style.width = '150px';
+                            icon.style.height = '150px';
+                            icon.style.display = 'flex';
+                            icon.style.flexDirection = 'column';
+                            icon.style.justifyContent = 'center';
+                            icon.style.alignItems = 'center';
+                            fileItem.appendChild(icon);
+                        }
+                        fileItem.appendChild(removeBtn);
+                        previewContainer.appendChild(fileItem);
+                    });
+                }
+            }
+
+            // --- ECG Tab Logic ---
+            setupFileUpload('ecg-upload', 'ecg-file', 'ecg-preview', 'ecg-image', 'remove-ecg');
+
+            document.getElementById('analyze-ecg').addEventListener('click', function() {
+                const ecgFile = document.getElementById('ecg-file').files[0];
+                const ecgType = document.getElementById('ecg-type').value;
+                const detectArrhythmias = document.getElementById('detect-arrhythmias').checked;
+                const measureIntervals = document.getElementById('measure-intervals').checked;
+                const analyzeSt = document.getElementById('analyze-st').checked;
+                const comparePrevious = document.getElementById('compare-previous').checked;
+
+                if (!ecgFile) {
+                    alert('Por favor, suba un archivo de ECG para analizar.');
+                    return;
+                }
+
+                document.getElementById('ecg-loading').style.display = 'flex';
+                document.getElementById('ecg-results').innerHTML = '';
+                document.getElementById('ecg-heatmap').style.display = 'none';
+                document.getElementById('ecg-comparison').style.display = 'none';
+                document.getElementById('ai-explanation').innerHTML = '<p class="text-muted">La explicación del modelo aparecerá aquí después del análisis.</p>';
+
+                // Simulate API call and response
+                setTimeout(() => {
+                    document.getElementById('ecg-loading').style.display = 'none';
+                    let resultsHtml = `<h4>Diagnóstico Sugerido: Ritmo Sinusal con Bradicardia</h4>
+                                       <p><strong>Frecuencia Cardíaca:</strong> 55 lpm</p>
+                                       <p><strong>Intervalo PR:</strong> 180 ms (Normal)</p>
+                                       <p><strong>Duración QRS:</strong> 80 ms (Normal)</p>
+                                       <p><strong>Intervalo QT corregido (QTc):</strong> 420 ms (Normal)</p>
+                                       <p><strong>Eje QRS:</strong> +60 grados (Normal)</p>`;
+                    
+                    if (detectArrhythmias) {
+                        resultsHtml += `<p><strong>Arritmias detectadas:</strong> Ninguna significativa. Bradicardia sinusal.</p>`;
+                    }
+                    if (analyzeSt) {
+                        resultsHtml += `<p><strong>Segmento ST:</strong> Sin elevaciones o depresiones isquémicas.</p>`;
+                    }
+                    if (comparePrevious) {
+                        document.getElementById('ecg-comparison').style.display = 'block';
+                    }
+                    document.getElementById('ecg-results').innerHTML = resultsHtml;
+                    document.getElementById('ecg-heatmap').style.display = 'block';
+                    document.getElementById('ai-explanation').innerHTML = `
+                        <p>El modelo <strong>DeepSeek-V3</strong> identificó un ritmo sinusal con bradicardia. Las mediciones de intervalos (PR, QRS, QTc) se encuentran dentro de los límites normales. La ausencia de elevación o depresión del segmento ST sugiere que no hay isquemia aguda. Se utilizó <strong>Gemini Vision</strong> para la extracción y digitalización precisa de las ondas del ECG y <strong>Med-PaLM 2</strong> para contextualizar los hallazgos con conocimiento médico general.</p>
+                        <p class="mt-2"><em>Confianza del modelo:</em> <strong class="text-success">92%</strong></p>
+                    `;
+                    document.getElementById('modalImage').src = document.getElementById('ecg-image').src; // For zoom
+                    document.getElementById('heatmap-img').src = 'https://via.placeholder.com/400x200?text=Heatmap+de+ECG+detectada'; // Placeholder for simulated heatmap
+                }, 3000);
+            });
+
+            // --- Radiology Tab Logic ---
+            const radiologyFiles = new DataTransfer(); // For radiology files
+            setupFileUpload('radiology-upload', 'radiology-file', 'radiology-preview-container');
+
+            document.getElementById('analyze-radiology').addEventListener('click', function() {
+                const uploadedFiles = document.getElementById('radiology-file').files;
+                const modalityType = document.getElementById('modality-type').value;
+                const bodyPart = document.getElementById('body-part').value;
+                const detectLesions = document.getElementById('detect-lesions').checked;
+                const generateReport = document.getElementById('generate-report').checked;
+
+                if (uploadedFiles.length === 0) {
+                    alert('Por favor, suba al menos una imagen radiológica para analizar.');
+                    return;
+                }
+
+                document.getElementById('radiology-loading').style.display = 'flex';
+                document.getElementById('radiology-results').innerHTML = '';
+                document.getElementById('radiology-findings').style.display = 'none';
+                document.getElementById('radiology-3d').style.display = 'none';
+                document.getElementById('structured-report').innerHTML = '<p class="text-muted">El informe aparecerá aquí después del análisis.</p>';
+
+
+                // Simulate API call and response
+                setTimeout(() => {
+                    document.getElementById('radiology-loading').style.display = 'none';
+                    document.getElementById('radiology-results').innerHTML = `
+                        <h4>Análisis Completo</h4>
+                        <p><strong>Modalidad:</strong> ${modalityType.toUpperCase()}</p>
+                        <p><strong>Área:</strong> ${bodyPart.charAt(0).toUpperCase() + bodyPart.slice(1)}</p>
+                        <p>El análisis automático ha completado la detección y medición de anomalías.</p>
+                    `;
+
+                    document.getElementById('radiology-findings').style.display = 'block';
+                    if (modalityType === 'ct' || modalityType === 'mri') { // Simulate 3D for CT/MRI
+                        document.getElementById('radiology-3d').style.display = 'block';
+                        document.getElementById('3d-viewer').src = 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1'; // Placeholder for 3D viewer
+                    } else {
+                         document.getElementById('radiology-3d').style.display = 'none';
+                    }
+                   
+                    if (generateReport) {
+                        const reportContent = `
+<strong>INFORME RADIOLÓGICO AUTOMATIZADO</strong>
+
+<strong>Fecha:</strong> 11/07/2025
+<strong>Modalidad:</strong> ${modalityType.toUpperCase()}
+<strong>Área del cuerpo:</strong> ${bodyPart.charAt(0).toUpperCase() + bodyPart.slice(1)}
+<strong>Hallazgos:</strong>
+    - Simulación: Lesión nodular de 1.5 cm detectada con alta probabilidad de malignidad.
+    - Simulación: Cambios inflamatorios leves adyacentes.
+<strong>Impresión:</strong>
+    - Requiere correlación clínica y posible biopsia.
+
+<strong>Analizado por:</strong> IA Multimodal (Gemini Vision, Med-PaLM 2)
+                        `;
+                        document.getElementById('structured-report').innerHTML = `<pre class="bg-light p-3 rounded border">${reportContent}</pre>`;
+                    }
+                }, 3000);
+            });
+
+
+            // --- Multimodal Tab Logic ---
+            const multimodalFiles = new DataTransfer(); // Centralized file storage for multimodal
+            setupFileUpload('multimodal-upload', 'multimodal-file-input', 'multimodal-preview-container');
+
+            document.getElementById('ask-ai').addEventListener('click', function() {
+                const clinicalContext = document.getElementById('clinical-context').value;
+                const uploadedMultimodalFiles = document.getElementById('multimodal-file-input').files;
+                const selectedAIModels = Array.from(document.getElementById('ai-models').selectedOptions).map(option => option.value);
+                const queryType = document.getElementById('query-type').value;
+
+                if (!clinicalContext && uploadedMultimodalFiles.length === 0) {
+                    alert('Por favor, ingrese contexto clínico o suba archivos para la consulta multimodal.');
+                    return;
+                }
+                if (selectedAIModels.length === 0) {
+                    alert('Por favor, seleccione al menos un modelo de IA para utilizar.');
+                    return;
+                }
+
+                document.getElementById('multimodal-loading').style.display = 'flex';
+                document.getElementById('multimodal-response').innerHTML = '';
+                document.getElementById('confidence-meter').style.display = 'none';
+                document.getElementById('differential-dx').style.display = 'none';
+                document.getElementById('dx-table-body').innerHTML = '';
+                document.getElementById('model-reasoning').innerHTML = '<p class="text-muted">El razonamiento de la IA aparecerá aquí.</p>';
+
+                // Simulate API call to a backend service that orchestrates AI models
+                console.log("Simulating multimodal analysis with:", {
+                    clinicalContext,
+                    uploadedFiles: Array.from(uploadedMultimodalFiles).map(f => f.name),
+                    selectedAIModels,
+                    queryType
+                });
+
+                setTimeout(() => {
+                    document.getElementById('multimodal-loading').style.display = 'none';
+
+                    // Simulate AI response based on query type and models
+                    let responseHtml = `<h4>Respuesta Integrada de la IA para "${queryType}"</h4>`;
+                    let confidence = 0;
+                    let differentialDx = [];
+                    let reasoningText = '';
+
+                    // Simulate confidence based on selected models
+                    if (selectedAIModels.length > 3) {
+                        confidence = Math.floor(Math.random() * (95 - 80 + 1)) + 80; // High confidence
+                    } else if (selectedAIModels.length > 1) {
+                        confidence = Math.floor(Math.random() * (80 - 60 + 1)) + 60; // Medium confidence
+                    } else {
+                        confidence = Math.floor(Math.random() * (60 - 40 + 1)) + 40; // Lower confidence
+                    }
+
+                    switch (queryType) {
+                        case 'diagnosis':
+                            responseHtml += `<p>Basado en los datos proporcionados, los posibles diagnósticos diferenciales son:</p>`;
+                            differentialDx = [
+                                { dx: 'Neumonía Bacteriana', prob: '70%', evidence: 'Infiltrados pulmonares en radiografía, fiebre, leucocitosis' },
+                                { dx: 'Bronquitis Aguda', prob: '20%', evidence: 'Tos productiva, sin consolidación clara en imagen' },
+                                { dx: 'Insuficiencia Cardíaca (descompensada)', prob: '10%', evidence: 'Derrame pleural, edema pulmonar leve en ECG' }
+                            ];
+                            reasoningText = `
+                                <p>El modelo <strong>Claude Medical</strong> realizó el razonamiento clínico integrando el contexto (síntomas, historial) con los hallazgos de imagen (procesados por <strong>Gemini Vision</strong>) y ECG (procesado por <strong>DeepSeek-V3</strong>). <strong>Med-PaLM 2</strong> proporcionó conocimiento médico para la generación del diagnóstico diferencial. <strong>GPT-4 Omni</strong> sintetizó la respuesta final.</p>
+                                <p>Se priorizó la Neumonía Bacteriana por la combinación de hallazgos radiológicos (opacidad), síntomas (fiebre, tos) y un supuesto aumento de leucocitos. Los otros diagnósticos se consideran menos probables basándose en la evidencia presentada.</p>
+                            `;
+                            break;
+                        case 'interpretation':
+                            responseHtml += `<p>Los hallazgos clave de los estudios y el contexto clínico son:</p>
+                                             <ul>
+                                                 <li><strong>Radiografía de Tórax:</strong> Infiltrado lobar inferior derecho.</li>
+                                                 <li><strong>ECG:</strong> Taquicardia sinusal, sin signos de isquemia aguda.</li>
+                                                 <li><strong>Contexto Clínico:</strong> Paciente con fiebre, tos, disnea.</li>
+                                             </ul>
+                                             <p>Estos hallazgos sugieren un proceso infeccioso pulmonar agudo.</p>`;
+                            reasoningText = `
+                                <p><strong>Gemini Vision</strong> identificó el infiltrado en la radiografía. <strong>DeepSeek-V3</strong> interpretó el ECG como taquicardia sinusal. <strong>GPT-4 Omni</strong> y <strong>Med-PaLM 2</strong> combinaron estos hallazgos con el contexto clínico para proporcionar una interpretación coherente, destacando la posible etiología infecciosa.</p>
+                            `;
+                            break;
+                        case 'treatment':
+                            responseHtml += `<p>Las opciones de tratamiento sugeridas, basadas en el diagnóstico y la evidencia, son:</p>
+                                             <ul>
+                                                 <li><strong>Antibióticos de amplio espectro:</strong> Para cubrir patógenos bacterianos comunes de neumonía.</li>
+                                                 <li><strong>Oxigenoterapia:</strong> Si la saturación de oxígeno es baja.</li>
+                                                 <li><strong>Manejo de síntomas:</strong> Antipiréticos, antitusígenos.</li>
+                                                 <li><strong>Monitoreo:</strong> Signos vitales, respuesta al tratamiento.</li>
+                                             </ul>
+                                             <p><em>Esta información es solo una guía y debe ser confirmada por un profesional médico.</em></p>`;
+                            reasoningText = `
+                                <p><strong>Med-PaLM 2</strong> proporcionó las directrices de tratamiento basadas en su vasto conocimiento médico. <strong>Claude Medical</strong> adaptó estas recomendaciones al escenario clínico específico inferido de los datos. <strong>GPT-4 Omni</strong> formuló la respuesta de manera clara y concisa.</p>
+                            `;
+                            break;
+                        case 'prognosis':
+                            responseHtml += `<p>El pronóstico estimado para este caso es:</p>
+                                             <p>Dada la aparente respuesta al tratamiento (si se ha iniciado) y la ausencia de comorbilidades graves, el pronóstico es <strong>favorable a bueno</strong> con la terapia adecuada. La recuperación completa se espera en 1-2 semanas, aunque la fatiga puede persistir.</p>
+                                             <p><em>Factores que podrían influir negativamente:</em> Edad avanzada, comorbilidades preexistentes (EPOC, diabetes), resistencia a antibióticos.</p>`;
+                            reasoningText = `
+                                <p><strong>Med-PaLM 2</strong> y <strong>Claude Medical</strong> colaboraron para evaluar el pronóstico, considerando la información de diagnóstico (simulada), la ausencia de complicaciones severas y factores de riesgo conocidos. <strong>GPT-4 Omni</strong> estructuró el pronóstico y sus factores influyentes.</p>
+                            `;
+                            break;
+                        case 'education':
+                            responseHtml += `<p>Información clave para el paciente sobre su condición (ej. Neumonía):</p>
+                                             <ul>
+                                                 <li><strong>¿Qué es?</strong> Una infección de los pulmones que causa inflamación y acumulación de líquido.</li>
+                                                 <li><strong>Síntomas:</strong> Fiebre, tos, dificultad para respirar, dolor en el pecho.</li>
+                                                 <li><strong>Tratamiento:</strong> Generalmente con antibióticos si es bacteriana. Reposo, hidratación.</li>
+                                                 <li><strong>Prevención:</strong> Vacunas (gripe, neumococo), lavado de manos.</li>
+                                             </ul>
+                                             <p><em>Es importante seguir las indicaciones de su médico para una recuperación efectiva.</em></p>`;
+                            reasoningText = `
+                                <p><strong>GPT-4 Omni</strong> se encargó de generar la explicación amigable para el paciente, simplificando la información médica compleja. <strong>Med-PaLM 2</strong> aseguró la precisión del contenido médico.</p>
+                            `;
+                            break;
+                    }
+
+                    document.getElementById('multimodal-response').innerHTML = responseHtml;
+                    document.getElementById('confidence-meter').style.display = 'block';
+                    document.getElementById('confidence-bar').style.width = `${confidence}%`;
+                    document.getElementById('confidence-bar').textContent = `${confidence}%`;
+                    document.getElementById('confidence-bar').className = `progress-bar ${confidence > 80 ? 'bg-success' : (confidence > 60 ? 'bg-info' : 'bg-warning')}`;
+
+
+                    if (differentialDx.length > 0) {
+                        document.getElementById('differential-dx').style.display = 'block';
+                        const dxTableBody = document.getElementById('dx-table-body');
+                        dxTableBody.innerHTML = '';
+                        differentialDx.forEach(dx => {
+                            const row = dxTableBody.insertRow();
+                            row.insertCell().textContent = dx.dx;
+                            row.insertCell().textContent = dx.prob;
+                            row.insertCell().textContent = dx.evidence;
+                        });
+                    }
+
+                    document.getElementById('model-reasoning').innerHTML = reasoningText;
+                    
+                    document.getElementById('show-sources').addEventListener('click', () => {
+                        alert('Simulación: Las fuentes serían artículos científicos, bases de datos médicas y directrices clínicas que los modelos utilizaron para su conocimiento.');
+                    });
+
+                    document.getElementById('debate-models').addEventListener('click', () => {
+                        alert('Simulación: En un sistema real, esto iniciaría un diálogo donde los modelos IA discutirían sus inferencias y la solidez de sus argumentos, exponiendo puntos de vista alternativos o incertidumbres.');
+                    });
+
+
+                }, 5000); // Simulate longer processing time for multimodal
+            });
+        });
+    </script>
+</body>
+</html>

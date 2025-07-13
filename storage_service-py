@@ -1,0 +1,21 @@
+import os
+from google.cloud import storage
+
+class StorageService:
+    def __init__(self):
+        # Asegúrate de que las credenciales de GCP estén configuradas (ej. con variables de entorno o archivo JSON)
+        self.client = storage.Client()
+        self.bucket_name = os.getenv("GCS_BUCKET_NAME", "your-gcs-bucket-name")
+        self.bucket = self.client.bucket(self.bucket_name)
+
+    async def upload_file(self, file_content: bytes, filename: str) -> str:
+        """Sube un archivo al almacenamiento en la nube y devuelve su URL."""
+        blob = self.bucket.blob(filename)
+        blob.upload_from_string(file_content, content_type="application/octet-stream")
+        # Generar una URL firmada o simplemente devolver el nombre para procesamiento interno
+        return f"gs://{self.bucket_name}/{filename}" # O una URL pública/firmada
+
+    async def download_file(self, filename: str) -> bytes:
+        """Descarga un archivo del almacenamiento en la nube."""
+        blob = self.bucket.blob(filename)
+        return blob.download_as_bytes()

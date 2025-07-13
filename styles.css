@@ -1,0 +1,313 @@
+/* styles.css */
+/* Variables de diseño */
+:root {
+  --primary: #2563eb;       /* Azul principal */
+  --primary-light: #3b82f6; /* Azul claro */
+  --primary-dark: #1d4ed8;  /* Azul oscuro */
+  --text: #1e293b;          /* Texto principal */
+  --text-light: #64748b;    /* Texto secundario */
+  --bg: #ffffff;            /* Fondo */
+  --bg-secondary: #f8fafc;  /* Fondo secundario */
+  --border: #e2e8f0;        /* Bordes */
+  --success: #10b981;       /* Verde éxito */
+  --warning: #f59e0b;       /* Amarillo advertencia */
+  --error: #ef4444;         /* Rojo error */
+  --radius: 8px;            /* Radio de bordes */
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Reset y estilos base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background-color: var(--bg-secondary);
+  color: var(--text);
+  line-height: 1.5;
+  padding: 20px;
+}
+
+/* Contenedor principal */
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: var(--bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+/* Encabezados */
+h1 {
+  font-size: 1.8rem;
+  color: var(--primary);
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+h2 {
+  font-size: 1.4rem;
+  color: var(--primary-dark);
+  margin-bottom: 1rem;
+}
+
+h3 {
+  font-size: 1.1rem;
+  color: var(--text);
+  margin-bottom: 0.8rem;
+}
+
+/* Layout de dos columnas */
+.app-layout {
+  display: flex;
+  min-height: calc(100vh - 100px);
+}
+
+/* Barra lateral */
+.sidebar {
+  width: 250px;
+  background-color: var(--bg-secondary);
+  padding: 1.5rem;
+  border-right: 1px solid var(--border);
+}
+
+.module-nav {
+  list-style: none;
+}
+
+.module-nav li {
+  margin-bottom: 0.5rem;
+}
+
+.module-nav a {
+  display: block;
+  padding: 0.7rem 1rem;
+  color: var(--text);
+  text-decoration: none;
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+}
+
+.module-nav a:hover,
+.module-nav a.active {
+  background-color: var(--primary);
+  color: white;
+}
+
+.settings-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Contenido principal */
+.main-content {
+  flex: 1;
+  padding: 1.5rem;
+}
+
+/* Área de subida de archivos */
+.upload-area {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  text-align: center;
+  margin: 1.5rem 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+  border-color: var(--primary);
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+.upload-area p {
+  margin-top: 1rem;
+  color: var(--text-light);
+}
+
+.upload-area:hover p {
+  color: var(--primary);
+}
+
+/* Selector de tipo ECG */
+.ecg-type-select {
+  margin-top: 1.5rem;
+}
+
+.ecg-type-select label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.ecg-type-select select {
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--bg);
+  font-size: 1rem;
+}
+
+/* Sección de resultados */
+.results-section {
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.results-placeholder {
+  color: var(--text-light);
+  font-style: italic;
+}
+
+/* Explicación IA */
+.ai-explanation {
+  background-color: #eff6ff;
+  border-left: 4px solid var(--primary);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 1rem;
+  margin: 1.5rem 0;
+}
+
+.ai-models {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-top: 0.5rem;
+}
+
+/* Parámetros de análisis */
+.analysis-params {
+  margin: 1.5rem 0;
+}
+
+.param-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.param-item input[type="checkbox"] {
+  margin-right: 0.8rem;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+/* Botón de análisis */
+.analyze-btn {
+  display: block;
+  width: 100%;
+  padding: 0.8rem;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+}
+
+.analyze-btn:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+/* Interruptores de configuración */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+  margin-right: 0.8rem;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--primary);
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.switch-label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.8rem;
+  cursor: pointer;
+}
+
+/* Estilos para estado activo/seleccionado */
+.active-state {
+  border-color: var(--success);
+  background-color: rgba(16, 185, 129, 0.05);
+}
+
+.active-state p {
+  color: var(--success);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .app-layout {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .main-content {
+    padding: 1rem;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+    padding: 1rem;
+  }
+  
+  .upload-area {
+    padding: 1.5rem;
+  }
+}

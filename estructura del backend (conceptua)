@@ -1,0 +1,16 @@
+.
+├── main.py
+├── routers/
+│   └── process_data.py
+├── services/
+│   ├── ai_orchestrator.py
+│   ├── deepseek_service.py
+│   ├── gemini_service.py
+│   ├── medpalm_claude_service.py
+│   ├── gpt4_service.py
+│   └── storage_service.py
+├── models/
+│   └── schemas.py
+├── utils/
+│   └── security.py
+└── requirements.txt

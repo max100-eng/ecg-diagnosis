@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+python-multipart
+httpx
+pydantic
+python-jose[cryptography] # For JWT
+# Otros paquetes específicos para interactuar con APIs (ej. google-cloud-storage para GCS, boto3 para AWS S3)
