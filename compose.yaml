@@ -1,23 +1,39 @@
-services:
-  python-app:
-    build:
-      context: .
-      dockerfile: dockerfile
-    container_name: python-app
-    restart: unless-stopped
-    init: true
-    ports:
-      - "8000:8000"  # Exposed by Dockerfile (uvicorn)
-    # env_file: ./.env  # Uncomment if .env file exists
-    # Add depends_on here if you add external services below
-    # networks: [appnet]  # Uncomment if you add more services needing a network
+name: Análisis Básico de ECG 
 
-# No external services (databases, cache, etc.) detected in the project context or Dockerfile.
-# If you add a database or other service, add it here and configure depends_on and networks as needed.
+on:
+  push:
+    branches:
+      - main # Ejecuta este workflow cada vez que haya un push a la rama 'main'
+  pull_request:
+    branches:
+      - main # Ejecuta también para Pull Requests hacia 'main'
 
-# No volumes section needed as there are no persistent data services.
+jobs:
+  run_ecg_script:
+    runs-on: ubuntu-latest # Se ejecutará en una máquina virtual Linux (Ubuntu)
 
-# If you add more services that need to communicate, define a network like this:
-# networks:
-#   appnet:
-#     driver: bridge
+    steps:
+    - name: 🚀 Checkout del código del repositorio
+      uses: actions/checkout@v4 # Clona tu repositorio en la máquina virtual
+
+    - name: 🐍 Configurar entorno Python
+      uses: actions/setup-python@v5 # Configura Python en el runner
+      with:
+        python-version: '3.10' # Puedes especificar la versión de Python que necesites
+
+    - name: ⚙️ Instalar dependencias de Python
+      run: |
+        python -m pip install --upgrade pip
+        pip install numpy scipy matplotlib wfdb-python neurokit2 # Instala las bibliotecas comunes para ECG
+      working-directory: ./src/ecg_project # Asume que tus scripts están aquí
+
+    - name: 📊 Ejecutar script de análisis de ECG
+      run: python analyze_ecg.py # Ejecuta tu script de Python principal
+      working-directory: ./src/ecg_project # Asegúrate de que el script se ejecuta desde la ubicación correcta
+
+    - name: 📦 Guardar artefactos (opcional)
+      uses: actions/upload-artifact@v4 # Guarda los resultados generados por tu script (ej. gráficos, informes)
+      if: always() # Siempre sube los artefactos, incluso si el paso anterior falla
+      with:
+        name: resultados-ecg
+        path: ./src/ecg_project/output/ # Asume que tu script guarda resultados aquí
