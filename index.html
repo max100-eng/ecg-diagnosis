@@ -3,359 +3,824 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análisis de ECG con IA</title>
+    <title>Sistema Profesional de Análisis de ECG con IA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+        }
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8f9fa;
-            padding: 20px;
+            color: #333;
         }
-        .card {
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            border: none;
+        
+        /* Updated Sidebar Styles */
+        .sidebar {
+            padding-top: 20px;
+            background-color: var(--primary-color) !important;
+            box-shadow: 2px 0 10px rgba(0,0,0,.1);
+            z-index: 1000; /* Ensure sidebar is above other content if overlapping */
+            height: 100vh; /* Keep for full height, but it won't be 'fixed' as per grid */
         }
-        .card-header {
-            background-color: #0d6efd;
+        
+        .sidebar .nav-link {
+            color: #ecf0f1;
+            padding: 12px 15px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: var(--secondary-color);
             color: white;
-            border-radius: 10px 10px 0 0 !important;
-            font-weight: bold;
         }
+        
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+
+        /* Botones adicionales en el sidebar (para "Descargar Curso" y "Ir a LITFL") */
+        .sidebar-extra-buttons {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-extra-buttons button {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            text-align: left;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #ecf0f1;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar-extra-buttons button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        /* Updated Content Styles */
+        .content {
+            padding: 25px;
+            /* No margin-left needed here, Bootstrap grid handles spacing */
+            transition: margin-left 0.3s; /* Keep for potential future animations/toggles */
+        }
+        
+        /* Media query for smaller screens: collapse sidebar text */
+        @media (max-width: 991.98px) { /* Corrected breakpoint for lg */
+            .sidebar .nav-link span {
+                display: none;
+            }
+            .sidebar .nav-link i {
+                margin-right: 0;
+                font-size: 1.3rem;
+                display: block; /* Center icon */
+                text-align: center;
+            }
+            .sidebar {
+                width: 80px; /* Fixed width for collapsed sidebar */
+                overflow: hidden; /* Hide overflowing text */
+            }
+            .content {
+                margin-left: 80px; /* Push content over by sidebar width */
+            }
+            .sidebar-extra-buttons button {
+                text-align: center; /* Centrar texto en botones colapsados */
+                font-size: 0.8rem; /* Reducir tamaño de fuente */
+            }
+            .sidebar-extra-buttons button i {
+                margin-right: 0;
+                display: block;
+                margin-bottom: 5px;
+            }
+        }
+
+        /* Adjustments for extra small screens to stack elements */
+        @media (max-width: 767.98px) { /* md breakpoint */
+            .sidebar {
+                width: 100%; /* Sidebar takes full width */
+                height: auto; /* Height adapts to content */
+                position: relative; /* Not fixed anymore */
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Add shadow below */
+            }
+            .sidebar .nav-link span {
+                display: inline; /* Show text again for stacked menu */
+            }
+            .sidebar .nav-link i {
+                margin-right: 10px;
+                display: inline-block;
+                text-align: left;
+            }
+            .content {
+                margin-left: 0; /* No margin-left needed when stacked */
+            }
+            .sidebar-extra-buttons button {
+                text-align: left; /* Volver a alinear a la izquierda */
+                font-size: initial; /* Volver al tamaño de fuente normal */
+            }
+            .sidebar-extra-buttons button i {
+                margin-right: 10px;
+                display: inline-block;
+                margin-bottom: 0;
+            }
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            border-top-left-radius: 10px !important;
+            border-top-right-radius: 10px !important;
+            padding: 15px 20px;
+        }
+        
         .file-upload {
-            border: 2px dashed #0d6efd;
-            border-radius: 8px;
+            border: 2px dashed var(--secondary-color);
+            border-radius: 10px;
             padding: 30px;
             text-align: center;
             margin: 20px 0;
             cursor: pointer;
-            background-color: #f8faff;
+            background-color: #f8f9fa;
             transition: all 0.3s;
         }
+        
         .file-upload:hover {
-            background-color: #e7f0ff;
-            border-color: #0b5ed7;
+            background-color: #eaf5ff;
+            border-color: var(--primary-color);
         }
-        .file-upload i {
-            color: #0d6efd;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+        
+        .file-upload.dragover {
+            background-color: #e3f2fd;
+            border-color: var(--accent-color);
         }
+        
         .loading-spinner {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 30px;
+            padding: 40px;
             text-align: center;
-            color: #0d6efd;
+            color: var(--secondary-color);
         }
+        
+        /* Estilos para la librería de ECG */
+        .ecg-thumbnail-container {
+            position: relative;
+            overflow: hidden;
+            height: 180px;
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .ecg-thumbnail {
+            max-height: 100%;
+            width: auto;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .ecg-thumbnail:hover {
+            transform: scale(1.05);
+        }
+        
+        .ecg-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .ecg-tags {
+            margin-top: 10px;
+        }
+        
+        .ecg-tags .badge {
+            margin-right: 5px;
+            font-weight: normal;
+        }
+        
+        /* Heatmap styles */
+        .heatmap-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        
         .heatmap {
-            max-width: 100%;
-            height: auto;
-            border: 1px solid #dee2e6;
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        /* Modal styles */
+        #ecgDetailModal .modal-dialog {
+            max-width: 900px;
+        }
+        
+        #ecgDetailImage {
+            max-height: 500px;
+            width: auto;
+            margin: 0 auto;
+            display: block;
             border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .progress {
-            height: 25px;
+        
+        .ecg-metadata {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
         }
-        #ecgPreview {
-            max-height: 300px;
-            display: none;
+        
+        .ecg-metadata p {
+            margin-bottom: 8px;
+        }
+        
+        /* Analysis results */
+        .analysis-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .parameter-card {
+            border-left: 4px solid var(--secondary-color);
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .parameter-card.abnormal {
+            border-left-color: var(--accent-color);
+            background-color: #fff5f5;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2980b9;
+        }
+        /* Added for clickable cards */
+        .cursor-pointer {
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="text-center my-4"><i class="bi bi-heart-pulse"></i> Análisis de ECG con IA</h1>
-        
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">
-                        Subir ECG
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3 col-lg-2 sidebar">
+                <div class="sticky-top pt-3">
+                    <div class="text-center mb-4">
+                        <img src="https://via.placeholder.com/80x80" alt="Logo" class="rounded-circle mb-2" style="width: 60px; height: 60px; object-fit: cover; border: 2px solid white;">
+                        <h5 class="text-white">CardioAI</h5>
                     </div>
-                    <div class="card-body">
-                        <div id="ecgUpload" class="file-upload">
-                            <i class="bi bi-cloud-arrow-up"></i>
-                            <p>Arrastra y suelta tu archivo de ECG aquí</p>
-                            <p class="text-muted small">o haz clic para seleccionar</p>
-                            <input type="file" id="ecgFile" accept=".jpg,.jpeg,.png,.pdf,.dicom,.dcm" style="display: none;">
+                    <ul class="nav flex-column nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#ecg-tab" data-bs-toggle="tab">
+                                <i class="bi bi-heart-pulse"></i> <span>Análisis ECG</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#library-tab" data-bs-toggle="tab">
+                                <i class="bi bi-collection"></i> <span>Librería ECG</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#history-tab" data-bs-toggle="tab">
+                                <i class="bi bi-clock-history"></i> <span>Historial</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#settings-tab" data-bs-toggle="tab">
+                                <i class="bi bi-gear"></i> <span>Configuración</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="mt-5 border-top pt-4">
+                        <h6 class="text-center mb-3 text-white">Modelos IA</h6>
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="deepseek-toggle" checked>
+                            <label class="form-check-label text-white-50" for="deepseek-toggle">DeepSeek-V3</label>
                         </div>
-                        
-                        <div class="text-center">
-                            <img id="ecgPreview" class="img-fluid rounded shadow" alt="Vista previa del ECG">
-                            <button id="removeEcg" class="btn btn-danger btn-sm mt-2" style="display: none;">
-                                <i class="bi bi-trash"></i> Eliminar archivo
-                            </button>
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="gemini-toggle" checked>
+                            <label class="form-check-label text-white-50" for="gemini-toggle">Gemini Vision</label>
                         </div>
-                        
-                        <div class="row mt-3">
-                            <div class="col-md-6">
-                                <label for="ecgType" class="form-label">Tipo de ECG:</label>
-                                <select class="form-select" id="ecgType">
-                                    <option value="standard">Estándar (12 derivaciones)</option>
-                                    <option value="holter">Holter (24h)</option>
-                                    <option value="stress">Prueba de esfuerzo</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="patientId" class="form-label">ID de Paciente (opcional):</label>
-                                <input type="text" class="form-control" id="patientId" placeholder="Ej: PAC-12345">
-                            </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="medpalm-toggle" checked>
+                            <label class="form-check-label text-white-50" for="medpalm-toggle">Med-PaLM 2</label>
                         </div>
                     </div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-header">
-                        Parámetros de Análisis
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="detectArrhythmias" checked>
-                                    <label class="form-check-label" for="detectArrhythmias">
-                                        Detectar arritmias
-                                    </label>
-                                </div>
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="measureIntervals" checked>
-                                    <label class="form-check-label" for="measureIntervals">
-                                        Medir intervalos (PR, QRS, QT)
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="analyzeST" checked>
-                                    <label class="form-check-label" for="analyzeST">
-                                        Analizar segmento ST
-                                    </label>
-                                </div>
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="comparePrevious">
-                                    <label class="form-check-label" for="comparePrevious">
-                                        Comparar con ECG previos
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <button id="analyzeBtn" class="btn btn-primary w-100 py-2">
-                            <i class="bi bi-activity"></i> Analizar ECG
+
+                    <div class="sidebar-extra-buttons">
+                        <button class="download-course-btn" id="downloadCourseBtn">
+                            <i class="bi bi-journal-medical"></i> Descargar "Curso de ECG" (PDF)
+                        </button>
+                        <button class="goto-litfl-btn" id="gotoLitflBtn">
+                            <i class="bi bi-link-45deg"></i> Ir a Librería ECG (LITFL)
                         </button>
                     </div>
+
                 </div>
-                
-                <div class="card">
-                    <div class="card-header">
-                        Resultados del Análisis
-                    </div>
-                    <div class="card-body">
-                        <div id="loadingIndicator" class="loading-spinner" style="display: none;">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">Cargando...</span>
+            </div>
+            
+            <div class="col-md-9 col-lg-10 content">
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="ecg-tab">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 class="mb-0"><i class="bi bi-heart-pulse text-primary"></i> Análisis de ECG con IA</h2>
+                            <button class="btn btn-outline-primary">
+                                <i class="bi bi-question-circle"></i> Ayuda
+                            </button>
+                        </div>
+                        <p class="lead text-muted">Interpretación avanzada de electrocardiogramas mediante modelos multimodales de inteligencia artificial.</p>
+                        
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="card mb-4">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <span><i class="bi bi-cloud-arrow-up"></i> Subir ECG</span>
+                                        <span class="badge bg-secondary">Beta</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <form action="/upload" method="post" enctype="multipart/form-data" id="ecgUploadForm">
+                                            
+                                            <div id="ecg-upload" class="file-upload">
+                                                <p><i class="bi bi-file-earmark-medical" style="font-size: 2.5rem; color: var(--secondary-color);"></i></p>
+                                                <p class="h5">Arrastra y suelta tu archivo de ECG aquí</p>
+                                                <p class="text-muted">o haz clic para seleccionar</p>
+                                                <input type="file" id="ecg-file" name="file" accept="image/png, image/jpeg, image/jpg" style="display: none;">
+                                            </div>
+
+                                            <div id="ecg-preview" class="text-center mt-3" style="display: none;">
+                                                <img id="ecg-image" src="#" alt="ECG Preview" class="img-fluid rounded shadow-sm" style="max-height: 300px;">
+                                                <div class="mt-3">
+                                                    <button type="button" class="btn btn-danger btn-sm" id="remove-ecg">
+                                                        <i class="bi bi-trash"></i> Eliminar archivo
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row mt-3">
+                                                <div class="col-md-6">
+                                                    <label for="ecg-type" class="form-label">Tipo de ECG:</label>
+                                                    <select class="form-select" id="ecg-type" name="ecg_type">
+                                                        <option value="Normal">Normal</option>
+                                                        <option value="Arritmia">Arritmia</option>
+                                                        <option value="Infarto">Infarto</option>
+                                                        <option value="standard">Estándar (12 derivaciones)</option>
+                                                        <option value="holter">Holter (24h)</option>
+                                                        <option value="stress">Prueba de esfuerzo</option>
+                                                        <option value="pediatric">Pediatría</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="patient-id" class="form-label">ID de Paciente (opcional):</label>
+                                                    <input type="text" class="form-control" id="patient-id" name="patient_id" placeholder="Ej: PAC-12345">
+                                                </div>
+                                            </div>
+
+                                            <button type="submit" class="btn btn-primary w-100 mt-3">
+                                                <i class="bi bi-cloud-arrow-up"></i> Subir y Analizar ECG
+                                            </button>
+
+                                        </form>
+                                        </div>
+                                </div>
+
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="bi bi-sliders"></i> Parámetros de análisis
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-check mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="detect-arrhythmias" checked>
+                                                    <label class="form-check-label" for="detect-arrhythmias">
+                                                        Detectar arritmias
+                                                    </label>
+                                                </div>
+                                                <div class="form-check mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="measure-intervals" checked>
+                                                    <label class="form-check-label" for="measure-intervals">
+                                                        Medir intervalos
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="analyze-st" checked>
+                                                    <label class="form-check-label" for="analyze-st">
+                                                        Analizar segmento ST
+                                                    </label>
+                                                </div>
+                                                <div class="form-check mb-3">
+                                                    <input class="form-check-input" type="checkbox" id="compare-previous">
+                                                    <label class="form-check-label" for="compare-previous">
+                                                        Comparar con previos
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        </div>
+                                </div>
                             </div>
-                            <p class="mt-2">Analizando ECG con modelos de IA...</p>
+                            
+                            <div class="col-lg-6">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <i class="bi bi-graph-up"></i> Resultados del análisis
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="ecg-loading" class="loading-spinner" style="display: none;">
+                                            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                            <p class="mt-3">Analizando ECG con modelos multimodales...</p>
+                                            <div class="progress mt-2" style="height: 8px;">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+                                            </div>
+                                        </div>
+                                        <div id="ecg-results">
+                                            <div class="text-center text-muted py-5">
+                                                <i class="bi bi-heart-pulse" style="font-size: 3rem;"></i>
+                                                <h5 class="mt-3">No hay ECG para analizar</h5>
+                                                <p>Sube un archivo de ECG o selecciona uno de la librería</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="ecg-heatmap" class="mt-4" style="display: none;">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <h5 class="mb-0"><i class="bi bi-heart-fill text-danger"></i> Mapa de calor de anomalías</h5>
+                                                <button class="btn btn-sm btn-outline-primary" id="zoom-heatmap">
+                                                    <i class="bi bi-zoom-in"></i> Ampliar
+                                                </button>
+                                            </div>
+                                            <img id="heatmap-img" src="https://via.placeholder.com/600x300/e0e0e0/333333?text=Heatmap+de+ECG" alt="Heatmap" class="img-fluid rounded">
+                                        </div>
+                                        
+                                        <div id="ecg-comparison" class="mt-4" style="display: none;">
+                                            <h5><i class="bi bi-clock-history text-primary"></i> Comparación temporal</h5>
+                                            <p class="text-muted small">Cambios respecto al ECG anterior:</p>
+                                            <div class="progress mt-2" style="height: 25px;">
+                                                <div class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25% Mejor</div>
+                                                <div class="progress-bar bg-warning" role="progressbar" style="width: 15%" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">15% Peor</div>
+                                                <div class="progress-bar bg-info" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100">60% Sin cambios</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="bi bi-robot"></i> Explicación de la IA
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="ai-explanation">
+                                            <div class="text-center text-muted py-3">
+                                                <i class="bi bi-info-circle" style="font-size: 2rem;"></i>
+                                                <p class="mt-2">La explicación del modelo aparecerá aquí después del análisis.</p>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3 pt-3 border-top">
+                                            <small class="text-muted">
+                                                <strong>Modelos utilizados:</strong> DeepSeek-V3 (análisis de ondas), Gemini Vision (interpretación visual), Med-PaLM 2 (contexto médico)
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <div id="resultsContainer">
-                            <p class="text-muted text-center">Suba un archivo de ECG para comenzar el análisis.</p>
-                        </div>
-                        
-                        <div id="heatmapContainer" class="mt-4 text-center" style="display: none;">
-                            <h5>Mapa de calor de anomalías</h5>
-                            <img id="heatmapImage" src="#" class="heatmap" alt="Mapa de calor de ECG">
-                            <div class="mt-3">
-                                <button id="zoomHeatmap" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-zoom-in"></i> Ampliar
+                    </div>
+                    
+                    <div class="tab-pane fade" id="library-tab">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 class="mb-0"><i class="bi bi-collection text-primary"></i> Librería Profesional de ECG</h2>
+                            <div>
+                                <button class="btn btn-primary me-2" id="addCaseButton">
+                                    <i class="bi bi-plus-circle"></i> Añadir Caso
+                                </button>
+                                <button class="btn btn-outline-secondary" id="export-library-btn">
+                                    <i class="bi bi-download"></i> Exportar
                                 </button>
                             </div>
                         </div>
+                        <p class="lead text-muted">Colección de casos clínicos con ECG para entrenamiento y referencia.</p>
                         
-                        <div id="comparisonContainer" class="mt-4" style="display: none;">
-                            <h5>Comparación temporal</h5>
-                            <p class="text-muted small">Cambios respecto al ECG anterior:</p>
-                            <div class="progress mt-2">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: 25%">25% Mejor</div>
-                                <div class="progress-bar bg-warning" role="progressbar" style="width: 15%">15% Peor</div>
-                                <div class="progress-bar bg-info" role="progressbar" style="width: 60%">60% Sin cambios</div>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label for="library-category" class="form-label">Categoría:</label>
+                                        <select class="form-select" id="library-category">
+                                            <option value="all">Todas las categorías</option>
+                                            <option value="Normal">Normales</option>
+                                            <option value="Arritmia">Arritmias</option>
+                                            <option value="Infarto">Infartos</option>
+                                            <option value="ischemia">Isquemias</option>
+                                            <option value="conduction">Alteraciones conducción</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="library-difficulty" class="form-label">Dificultad:</label>
+                                        <select class="form-select" id="library-difficulty">
+                                            <option value="all">Todos los niveles</option>
+                                            <option value="basic">Básico</option>
+                                            <option value="intermediate">Intermedio</option>
+                                            <option value="advanced">Avanzado</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="library-leads" class="form-label">Derivaciones:</label>
+                                        <select class="form-select" id="library-leads">
+                                            <option value="all">Todas</option>
+                                            <option value="12">12 derivaciones</option>
+                                            <option value="5">5 derivaciones</option>
+                                            <option value="3">3 derivaciones</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="library-search" class="form-label">Buscar:</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="library-search" placeholder="Ej: FA, IAM">
+                                            <button class="btn btn-outline-secondary" type="button" id="library-search-btn">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                        
+                        <div class="row" id="ecg-library-grid">
+                            {% for ecg in ecgs %}
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card cursor-pointer" data-bs-toggle="modal" data-bs-target="#ecgDetailModal" data-ecg-id="{{ ecg.id }}">
+                                    <div class="ecg-thumbnail-container">
+                                        <img src="{{ url_for('uploaded_file', filename=ecg.filename) }}" class="ecg-thumbnail" alt="ECG {{ ecg.ecg_type }}">
+                                        <span class="ecg-badge bg-{{ 'success' if ecg.ecg_type == 'Normal' else 'warning' if ecg.ecg_type == 'Arritmia' else 'danger' }}">
+                                            {{ ecg.ecg_type }}
+                                        </span>
+                                    </div>
+                                    <div class="card-body">
+                                        <h5 class="card-title">ECG de {{ ecg.ecg_type }}</h5>
+                                        <p class="card-text text-muted small">ID Paciente: {{ ecg.patient_id }}, Subido: {{ ecg.upload_date }}</p>
+                                        <div class="ecg-tags">
+                                            <span class="badge bg-primary">{{ ecg.ecg_type }}</span>
+                                            </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="col-12 text-center text-muted py-5">
+                                <i class="bi bi-folder" style="font-size: 3rem;"></i>
+                                <h5 class="mt-3">No hay ECGs en la librería.</h5>
+                                <p>Sube uno usando el formulario de "Análisis ECG".</p>
+                            </div>
+                            {% endfor %}
+
+                        </div>
                     </div>
+                    
+                    <div class="tab-pane fade" id="history-tab">
+                        <h2 class="mb-0"><i class="bi bi-clock-history text-primary"></i> Historial de Análisis</h2>
+                        <p class="lead text-muted">Revisa tus análisis de ECG anteriores.</p>
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-archive" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3">Aún no hay historial de análisis.</h5>
+                            <p>Realiza un análisis para ver los resultados aquí.</p>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="settings-tab">
+                        <h2 class="mb-0"><i class="bi bi-gear text-primary"></i> Configuración</h2>
+                        <p class="lead text-muted">Ajusta las preferencias de la aplicación.</p>
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-tools" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3">Opciones de configuración disponibles pronto.</h5>
+                            <p>Mantente atento a las actualizaciones.</p>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal para ampliar imagen -->
-    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+    <div class="modal fade" id="ecgDetailModal" tabindex="-1" aria-labelledby="ecgDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Visualización de ECG</h5>
+                    <h5 class="modal-title" id="ecgDetailModalLabel">Detalles del ECG</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <img id="modalImage" src="#" class="img-fluid" alt="ECG ampliado">
-                </div>
+                    <img id="modalEcgImage" src="" alt="ECG en detalle" class="img-fluid rounded shadow-sm mb-4">
+                    <div class="ecg-metadata text-start">
+                        <p><strong>Tipo de ECG:</strong> <span id="modalEcgType"></span></p>
+                        <p><strong>ID Paciente:</strong> <span id="modalPatientId"></span></p>
+                        <p><strong>Fecha de Subida:</strong> <span id="modalUploadDate"></span></p>
+                        <p><strong>Nombre del Archivo:</strong> <span id="modalFilename"></span></p>
+                    </div>
+                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
             </div>
         </div>
     </div>
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const ecgUpload = document.getElementById('ecgUpload');
-            const ecgFileInput = document.getElementById('ecgFile');
-            const ecgPreview = document.getElementById('ecgPreview');
-            const removeEcgBtn = document.getElementById('removeEcg');
-            const analyzeBtn = document.getElementById('analyzeBtn');
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            const resultsContainer = document.getElementById('resultsContainer');
-            const heatmapContainer = document.getElementById('heatmapContainer');
-            const heatmapImage = document.getElementById('heatmapImage');
-            const comparisonContainer = document.getElementById('comparisonContainer');
-            const imageModal = new bootstrap.Modal('#imageModal');
-            
-            // Configurar área de arrastrar y soltar
-            ecgUpload.addEventListener('click', () => ecgFileInput.click());
-            
-            ecgUpload.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                ecgUpload.style.backgroundColor = '#e7f0ff';
-            });
-            
-            ecgUpload.addEventListener('dragleave', () => {
-                ecgUpload.style.backgroundColor = '#f8faff';
-            });
-            
-            ecgUpload.addEventListener('drop', (e) => {
-                e.preventDefault();
-                ecgUpload.style.backgroundColor = '#f8faff';
-                if (e.dataTransfer.files.length) {
-                    ecgFileInput.files = e.dataTransfer.files;
-                    handleFileSelection(e.dataTransfer.files[0]);
-                }
-            });
-            
-            ecgFileInput.addEventListener('change', () => {
-                if (ecgFileInput.files.length) {
-                    handleFileSelection(ecgFileInput.files[0]);
-                }
-            });
-            
-            // Manejar la selección de archivos
-            function handleFileSelection(file) {
-                if (file.type.startsWith('image/')) {
+            // Manejo de la carga de archivos (arrastrar y soltar, clic)
+            const ecgUploadArea = document.getElementById('ecg-upload');
+            const ecgFileInput = document.getElementById('ecg-file');
+            const ecgPreview = document.getElementById('ecg-preview');
+            const ecgImage = document.getElementById('ecg-image');
+            const removeEcgButton = document.getElementById('remove-ecg');
+            const ecgUploadForm = document.getElementById('ecgUploadForm'); // Referencia al formulario completo
+
+            // Previsualización de la imagen seleccionada
+            ecgFileInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
                     const reader = new FileReader();
-                    reader.onload = (e) => {
-                        ecgPreview.src = e.target.result;
+                    reader.onload = function(e) {
+                        ecgImage.src = e.target.result;
                         ecgPreview.style.display = 'block';
-                        removeEcgBtn.style.display = 'inline-block';
+                        ecgUploadArea.style.display = 'none'; // Oculta el área de carga
                     };
                     reader.readAsDataURL(file);
                 } else {
-                    alert('Por favor, suba un archivo de imagen (JPG, PNG) o un archivo médico compatible.');
-                    ecgFileInput.value = '';
+                    ecgPreview.style.display = 'none';
+                    ecgUploadArea.style.display = 'block'; // Muestra el área de carga
                 }
-            }
-            
-            // Eliminar archivo seleccionado
-            removeEcgBtn.addEventListener('click', () => {
-                ecgPreview.src = '#';
+            });
+
+            // Replicar clic en input de archivo cuando se hace clic en el área de carga
+            ecgUploadArea.addEventListener('click', function() {
+                ecgFileInput.click();
+            });
+
+            // Manejo de arrastrar y soltar
+            ecgUploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                ecgUploadArea.classList.add('dragover');
+            });
+
+            ecgUploadArea.addEventListener('dragleave', function() {
+                ecgUploadArea.classList.remove('dragover');
+            });
+
+            ecgUploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                ecgUploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    ecgFileInput.files = files; // Asigna los archivos arrastrados al input
+                    ecgFileInput.dispatchEvent(new Event('change')); // Dispara el evento change
+                }
+            });
+
+            // Eliminar archivo de previsualización
+            removeEcgButton.addEventListener('click', function() {
+                ecgFileInput.value = ''; // Resetea el input de archivo
+                ecgImage.src = '#';
                 ecgPreview.style.display = 'none';
-                removeEcgBtn.style.display = 'none';
-                ecgFileInput.value = '';
-                resultsContainer.innerHTML = '<p class="text-muted text-center">Suba un archivo de ECG para comenzar el análisis.</p>';
-                heatmapContainer.style.display = 'none';
-                comparisonContainer.style.display = 'none';
+                ecgUploadArea.style.display = 'block';
             });
-            
-            // Ampliar heatmap
-            document.getElementById('zoomHeatmap').addEventListener('click', () => {
-                document.getElementById('modalImage').src = heatmapImage.src;
-                imageModal.show();
-            });
-            
-            // Analizar ECG
-            analyzeBtn.addEventListener('click', () => {
-                if (!ecgFileInput.files.length) {
-                    alert('Por favor, suba un archivo de ECG para analizar.');
-                    return;
+
+
+            // Lógica para el modal de detalles del ECG
+            const ecgDetailModal = document.getElementById('ecgDetailModal');
+            ecgDetailModal.addEventListener('show.bs.modal', function (event) {
+                // Botón que disparó el modal
+                const button = event.relatedTarget;
+                // Extrae la información de los atributos data-*
+                const ecgId = button.getAttribute('data-ecg-id');
+
+                // Aquí deberías hacer una petición a Flask para obtener los detalles específicos del ECG por su ID
+                // Por ahora, usaremos los datos disponibles en el HTML (pasados por Jinja)
+                // En un entorno real, harías algo como:
+                // fetch(`/ecg_details/${ecgId}`)
+                //     .then(response => response.json())
+                //     .then(ecg => {
+                //         modalEcgImage.src = `/uploads/${ecg.filename}`;
+                //         modalEcgType.textContent = ecg.ecg_type;
+                //         modalPatientId.textContent = ecg.patient_id;
+                //         modalUploadDate.textContent = ecg.upload_date;
+                //         modalFilename.textContent = ecg.filename;
+                //     });
+
+                // Para este ejemplo, y dado que la lista `ecgs` ya está disponible globalmente a través de Jinja
+                // (si pasas 'ecgs' a render_template('index.html')), podrías buscarlo localmente.
+                // Sin embargo, para una aplicación más escalable, la petición `fetch` sería mejor.
+                // Para simplificar, y ya que Jinja renderiza los datos, podríamos hacer esto:
+                // Los datos ya están en el HTML, los buscamos.
+                const ecgsData = {{ ecgs | tojson }}; // Esto convierte la variable Python `ecgs` a un objeto JS
+                const selectedEcg = ecgsData.find(ecg => ecg.id === ecgId);
+
+                if (selectedEcg) {
+                    document.getElementById('modalEcgImage').src = `/uploads/${selectedEcg.filename}`;
+                    document.getElementById('modalEcgType').textContent = selectedEcg.ecg_type;
+                    document.getElementById('modalPatientId').textContent = selectedEcg.patient_id;
+                    document.getElementById('modalUploadDate').textContent = selectedEcg.upload_date;
+                    document.getElementById('modalFilename').textContent = selectedEcg.filename;
                 }
-                
-                // Mostrar carga
-                loadingIndicator.style.display = 'flex';
-                resultsContainer.innerHTML = '';
-                heatmapContainer.style.display = 'none';
-                comparisonContainer.style.display = 'none';
-                
-                // Simular análisis con IA (en un caso real, aquí iría una llamada a la API)
-                setTimeout(() => {
-                    loadingIndicator.style.display = 'none';
-                    
-                    // Resultados simulados
-                    const ecgType = document.getElementById('ecgType').value;
-                    const detectArrhythmias = document.getElementById('detectArrhythmias').checked;
-                    const measureIntervals = document.getElementById('measureIntervals').checked;
-                    const analyzeST = document.getElementById('analyzeST').checked;
-                    const comparePrevious = document.getElementById('comparePrevious').checked;
-                    
-                    let resultsHTML = `
-                        <h4>Diagnóstico Sugerido: <span class="text-primary">Ritmo Sinusal Normal</span></h4>
-                        <div class="row mt-3">
-                            <div class="col-md-6">
-                                <p><strong>Frecuencia Cardíaca:</strong> 72 lpm</p>
-                                <p><strong>Intervalo PR:</strong> 160 ms (Normal)</p>
-                                <p><strong>Duración QRS:</strong> 90 ms (Normal)</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Intervalo QT:</strong> 380 ms</p>
-                                <p><strong>QT Corregido:</strong> 410 ms (Normal)</p>
-                                <p><strong>Eje Cardíaco:</strong> Normal (+30°)</p>
-                            </div>
-                        </div>
-                    `;
-                    
-                    if (detectArrhythmias) {
-                        resultsHTML += `
-                            <div class="alert alert-success mt-3">
-                                <i class="bi bi-check-circle"></i> <strong>Arritmias:</strong> No se detectaron arritmias significativas.
-                            </div>
-                        `;
-                    }
-                    
-                    if (analyzeST) {
-                        resultsHTML += `
-                            <div class="alert alert-success mt-3">
-                                <i class="bi bi-check-circle"></i> <strong>Segmento ST:</strong> Sin elevaciones o depresiones significativas.
-                            </div>
-                        `;
-                    }
-                    
-                    resultsHTML += `
-                        <div class="alert alert-info mt-3">
-                            <i class="bi bi-info-circle"></i> <strong>Modelos utilizados:</strong> DeepSeek-V3 (análisis de ondas), Gemini Vision (interpretación visual), Med-PaLM 2 (contexto clínico).
-                        </div>
-                    `;
-                    
-                    resultsContainer.innerHTML = resultsHTML;
-                    
-                    // Mostrar heatmap (simulado)
-                    heatmapImage.src = 'https://via.placeholder.com/800x400?text=Heatmap+de+Anomalías+de+ECG';
-                    heatmapContainer.style.display = 'block';
-                    
-                    // Mostrar comparación si está activada
-                    if (comparePrevious) {
-                        comparisonContainer.style.display = 'block';
-                    }
-                    
-                }, 3000); // Simular tiempo de procesamiento
             });
+
+            // Lógica para el botón "Añadir Caso" en la librería
+            const addCaseButton = document.getElementById('addCaseButton');
+            if (addCaseButton) {
+                addCaseButton.addEventListener('click', function() {
+                    // Cambiar a la pestaña de "Análisis ECG"
+                    const ecgTabTrigger = document.querySelector('#ecg-tab[data-bs-toggle="tab"]');
+                    const tab = new bootstrap.Tab(document.querySelector('.nav-link[href="#ecg-tab"]'));
+                    tab.show();
+                    // Opcional: Desplazarse al área de carga de archivos
+                    document.getElementById('ecg-upload').scrollIntoView({ behavior: 'smooth' });
+                });
+            }
+
+            // Lógica para el botón "Descargar Curso" (ejemplo)
+            const downloadCourseBtn = document.getElementById('downloadCourseBtn');
+            if (downloadCourseBtn) {
+                downloadCourseBtn.addEventListener('click', function() {
+                    alert('Simulando descarga del "Curso de ECG"...');
+                    // Aquí iría la lógica real para iniciar la descarga,
+                    // quizás redirigir a un PDF alojado estáticamente
+                    // window.location.href = '/static/curso_ecg.pdf';
+                });
+            }
+
+            // Lógica para el botón "Ir a Librería ECG (LITFL)" (ejemplo)
+            const gotoLitflBtn = document.getElementById('gotoLitflBtn');
+            if (gotoLitflBtn) {
+                gotoLitflBtn.addEventListener('click', function() {
+                    window.open('https://litfl.com/ecg-library/', '_blank'); // Abre en una nueva pestaña
+                });
+            }
         });
     </script>
 </body>
